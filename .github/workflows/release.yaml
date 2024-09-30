@@ -1,0 +1,80 @@
+name: Versioned Releases of Foundry
+
+on:
+  workflow_dispatch: # Manual trigger
+  schedule:
+    - cron: '0 12 * * 0' # Every Sunday at 8AM ET (Noon UTC)
+
+jobs:
+  bump-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Get the latest release from foundry-rs/foundry
+        id: get-foundry-release
+        run: |
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/foundry-rs/foundry/releases/latest)
+          echo "Foundry release: $LATEST_RELEASE"
+          # Extract the tag name, assets, and other needed info
+          echo "::set-output name=upstream_name::$(echo "$LATEST_RELEASE" | jq.name)"
+          echo "::set-output name=release_id::$(echo "$LATEST_RELEASE" | jq -r .id)"
+          echo "::set-output name=assets_url::$(echo "$LATEST_RELEASE" | jq -r .assets_url)"
+
+      - name: Generate next minor version number
+        id: next-minor-version
+        run: |
+          CURRENT_VERSION=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Bump minor version using semver
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MINOR_VERSION=$((VERSION_PARTS[1] + 1))
+          NEW_VERSION="${VERSION_PARTS[0]}.$MINOR_VERSION.0"
+          
+          echo "New version: $NEW_VERSION"
+          echo "::set-output name=new_version::$NEW_VERSION"
+
+      - name: Create new release
+        id: create-release
+        run: |
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "tag_name": "${{ steps.next-minor-verion.outputs.new_version }}",
+              "target_commitish": "main",
+              "name": "Release ${{ steps.next-minor-verion.outputs.new_version }}",
+              "body": "Release bumped to ${{ steps.next-minor-verion.outputs.new_version }}",
+              "draft": false,
+              "prerelease": false
+            }' \
+            https://api.github.com/repos/${{ github.repository }}/releases
+
+          # Extract the release ID from the response
+          RELEASE_ID=$(echo "$RESPONSE" | jq -r .id)
+
+          # Set the release ID as an output for subsequent steps
+          echo "::set-output name=id::$RELEASE_ID"
+
+      - name: Attach assets from foundry-rs release
+        run: |
+          ASSETS_URL="${{ steps.get-foundry-release.outputs.assets_url }}"
+          RELEASE_ID="${{ steps.create-release.outputs.id }}"
+
+          ASSETS=$(curl -s $ASSETS_URL | jq -r '.[].browser_download_url')
+          
+          for ASSET_URL in $ASSETS; do
+            ASSET_NAME=$(basename "$ASSET_URL")
+            echo "Downloading $ASSET_NAME from Foundry..."
+            curl -L "$ASSET_URL" -o "$ASSET_NAME"
+            
+            echo "Uploading $ASSET_NAME to new release..."
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+              -H "Content-Type: $(file -b --mime-type "$ASSET_NAME")" \
+              --data-binary @"$ASSET_NAME" \
+              https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$ASSET_NAME
+          done
+
