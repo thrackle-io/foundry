@@ -15,7 +15,7 @@ jobs:
       - name: Get the latest release from foundry-rs/foundry
         id: get-foundry-release
         run: |
-          LATEST_RELEASE=$(curl -s https://api.github.com/repos/foundry-rs/foundry/releases | jq '[.[]]' | first)
+          LATEST_RELEASE=$(curl -s https://api.github.com/repos/foundry-rs/foundry/releases | jq '[.[]] | first')
           echo "Foundry release: $LATEST_RELEASE"
           # Extract the tag name, assets, and other needed info
           echo "::set-output name=upstream_name::$(echo "$LATEST_RELEASE" | jq.name)"
