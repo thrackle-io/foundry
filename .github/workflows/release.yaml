@@ -25,7 +25,7 @@ jobs:
           # Extract the tag name, assets, and other needed info
           echo "upstream_name=$(echo "$LATEST_RELEASE" | jq -r .name)" >> $GITHUB_OUTPUT
           echo "release_id=$(echo "$LATEST_RELEASE" | jq -r .id)" >> $GITHUB_OUTPUT
-          echo "release_url=$(echo "$LATEST_RELEASE" | jq -r .url)" >> $GITHUB_OUTPUT
+          echo "release_url=$(echo "$LATEST_RELEASE" | jq -r .html_url)" >> $GITHUB_OUTPUT
           echo "assets_url=$(echo "$LATEST_RELEASE" | jq -r .assets_url)" >> $GITHUB_OUTPUT
 
       - name: Generate next minor version number
@@ -51,8 +51,8 @@ jobs:
           tag_name: "${{ steps.next-minor-version.outputs.new_version }}"
           release_name: "Foundry ${{ steps.next-minor-version.outputs.new_version }}"
           body: |
-            Versioned by Thrackle as ${{ steps.next-minor-version.outputs.new_version }} from upstream Foundry release ${{ steps.get-foundry-release.outputs.upstream_name }}
-            Attached assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.html_url }})
+            Versioned by Thrackle as ${{ steps.next-minor-version.outputs.new_version }} from upstream Foundry release `${{ steps.get-foundry-release.outputs.upstream_name }}`
+            Attached assets from [foundry-rs/foundry `${{ steps.get-foundry-release.outputs.upstream_name }}`](${{ steps.get-foundry-release.outputs.release_url }})
           draft: false
           prerelease: false
 
