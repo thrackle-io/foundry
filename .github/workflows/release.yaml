@@ -69,9 +69,5 @@ jobs:
             curl -L "$ASSET_URL" -o "$ASSET_NAME"
             
             echo "Uploading $ASSET_NAME to new release..."
-            curl -X POST \
-              -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
-              -H "Content-Type: $(file -b --mime-type "$ASSET_NAME")" \
-              --data-binary @"$ASSET_NAME" \
-              https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$ASSET_NAME
+            gh release upload "${{ steps.next-minor-version.outputs.new_version }}" "$ASSET_NAME"
           done
