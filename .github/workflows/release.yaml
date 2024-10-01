@@ -23,10 +23,10 @@ jobs:
           LATEST_RELEASE=$(curl -s https://api.github.com/repos/foundry-rs/foundry/releases | jq '[.[]] | first')
           echo "Foundry release: $LATEST_RELEASE"
           # Extract the tag name, assets, and other needed info
-          echo "::set-output name=upstream_name::$(echo "$LATEST_RELEASE" | jq.name)"
-          echo "::set-output name=release_id::$(echo "$LATEST_RELEASE" | jq -r .id)"
-          echo "::set-output name=release_url::$(echo "$LATEST_RELEASE" | jq -r .url)"
-          echo "::set-output name=assets_url::$(echo "$LATEST_RELEASE" | jq -r .assets_url)"
+          echo "upstream_name=$(echo "$LATEST_RELEASE" | jq.name)" >> $GITHUB_OUTPUT
+          echo "release_id=$(echo "$LATEST_RELEASE" | jq -r .id)" >> $GITHUB_OUTPUT
+          echo "release_url=$(echo "$LATEST_RELEASE" | jq -r .url)" >> $GITHUB_OUTPUT
+          echo "assets_url=$(echo "$LATEST_RELEASE" | jq -r .assets_url)" >> $GITHUB_OUTPUT
 
       - name: Generate next minor version number
         id: next-minor-version
@@ -40,7 +40,7 @@ jobs:
           NEW_VERSION="${VERSION_PARTS[0]}.$MINOR_VERSION.0"
           
           echo "New version: $NEW_VERSION"
-          echo "::set-output name=new_version::$NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create-release
@@ -48,10 +48,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "${{ steps.next-minor-verion.outputs.new_version }}"
-          release_name: "Foundry Version ${{ steps.next-minor-verion.outputs.new_version }}"
+          tag_name: "${{ steps.next-minor-version.outputs.new_version }}"
+          release_name: "Foundry Version ${{ steps.next-minor-version.outputs.new_version }}"
           body: |
-            "Versioned by Thrackle as ${{ steps.next-minor-verion.outputs.new_version }}."
+            "Versioned by Thrackle as ${{ steps.next-minor-version.outputs.new_version }}."
             "Attached assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.release_url }})"
           draft: false
           prerelease: false
@@ -75,4 +75,3 @@ jobs:
               --data-binary @"$ASSET_NAME" \
               https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$ASSET_NAME
           done
-
