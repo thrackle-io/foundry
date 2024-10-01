@@ -1,7 +1,7 @@
 
 ## Thrackle.io Foundry Versioning
 
-<img src=".github/logo.png" alt="Foundry logo" align="right" width="120" />
+<img src="https://github.com/foundry-rs/foundry/blob/master/.github/logo.png" alt="Foundry logo" align="right" width="120" />
 
 Providing numeric versioned releases of Foundry. All release assets are bit-for-bit identical copies from [foundry-rs/foundry nightly releases](https://github.com/foundry-rs/foundry/releases).
 
