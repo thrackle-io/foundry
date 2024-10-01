@@ -43,6 +43,7 @@ jobs:
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
       - name: Fetch upstream release artifacts and calculate checksums
+        id: fetch-assets
         run: |
           VERSION=${{ steps.next-minor-version.outputs.new_version }}
           ASSETS_URL="${{ steps.get-foundry-release.outputs.assets_url }}"
@@ -72,12 +73,8 @@ jobs:
           body: |
             Versioned by Thrackle as ${{ steps.next-minor-version.outputs.new_version }} from upstream Foundry release `${{ steps.get-foundry-release.outputs.upstream_name }}`
             Attached assets from [foundry-rs/foundry `${{ steps.get-foundry-release.outputs.upstream_name }}`](${{ steps.get-foundry-release.outputs.release_url }})
-            ${{ steps.get-foundry-release.outputs.checksums }} 
+            ${{ steps.fetch-assets.outputs.checksums }} 
           draft: false
           prerelease: false
           files: |
-            *.tgz
-            *.tar.gz
-            *.tar.bz2
-            *.zip
-            *checksums.txt
+            *${{ steps.next-minor-version.outputs.new_version }}*.{tar.gz,zip,txt}
