@@ -69,6 +69,9 @@ jobs:
             ASSET_NAME=$(basename "$ASSET_URL")
             echo "Downloading $ASSET_NAME from Foundry..."
             curl -L "$ASSET_URL" -o "$ASSET_NAME"
+
+            # Rename 'nightly' to the new version number
+            ASSET_NAME="${ASSET_NAME/_nightly_/_${{ steps.next-minor-version.outputs.new_version }}_}"
             
             echo "Uploading $ASSET_NAME to new release..."
             gh release upload "${{ steps.next-minor-version.outputs.new_version }}" "$ASSET_NAME"
