@@ -50,17 +50,19 @@ jobs:
           ASSETS=$(curl -s $ASSETS_URL | jq -r '.[].browser_download_url')
           echo "Foundry release assets: $ASSETS"
 
-          # Collect checksums for each asset:
-          CHECKSUMS_TXT="### Checksums for Foundry $VERSION\n\n"
+          BODY="Versioned by Thrackle as $VERSION from upstream Foundry release `${{ steps.get-foundry-release.outputs.upstream_name }}`\n"
+          BODY+="Attached assets from [foundry-rs/foundry `${{ steps.get-foundry-release.outputs.upstream_name }}`](${{ steps.get-foundry-release.outputs.release_url }})"
+          BODY+="\n\n"
+          BODY="### Checksums for Foundry $VERSION\n\n"
 
           for ASSET_URL in $ASSETS; do
             ASSET_NAME=$(basename "$ASSET_URL")
             ASSET_NAME=${ASSET_NAME/_nightly/_$VERSION}
             echo "Downloading $ASSET_NAME from Foundry..."
             curl -L "$ASSET_URL" -o "$ASSET_NAME"
-            CHECKSUMS_TXT+="$(sha256sum "$ASSET_NAME" | tee -a foundry_${VERSION}_checksums.txt)\n"
+            BODY+="$(sha256sum "$ASSET_NAME" | tee -a foundry_${VERSION}_checksums.txt)\n"
           done
-          echo "checksums=$CHECKSUMS_TXT" >> $GITHUB_OUTPUT
+          echo "body_text=$BODY" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create-release
@@ -71,10 +73,10 @@ jobs:
           name: "Foundry ${{ steps.next-minor-version.outputs.new_version }}"
           tag_name: "${{ steps.next-minor-version.outputs.new_version }}"
           body: |
-            Versioned by Thrackle as ${{ steps.next-minor-version.outputs.new_version }} from upstream Foundry release `${{ steps.get-foundry-release.outputs.upstream_name }}`
-            Attached assets from [foundry-rs/foundry `${{ steps.get-foundry-release.outputs.upstream_name }}`](${{ steps.get-foundry-release.outputs.release_url }})
-            ${{ steps.fetch-assets.outputs.checksums }} 
+            ${{ steps.fetch-assets.outputs.body_text }}
           draft: false
           prerelease: false
           files: |
-            *${{ steps.next-minor-version.outputs.new_version }}*.{tar.gz,zip,txt}
+            *${{ steps.next-minor-version.outputs.new_version }}*.tar.gz
+            *${{ steps.next-minor-version.outputs.new_version }}*.zip
+            *${{ steps.next-minor-version.outputs.new_version }}*.txt
