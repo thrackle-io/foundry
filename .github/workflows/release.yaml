@@ -42,28 +42,19 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "::set-output name=new_version::$NEW_VERSION"
 
-      - name: Create new release
+      - name: Create Release
         id: create-release
-        run: |
-          curl -X POST \
-            -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "tag_name": "${{ steps.next-minor-verion.outputs.new_version }}",
-              "target_commitish": "main",
-              "name": "Foundry Version ${{ steps.next-minor-verion.outputs.new_version }}",
-              "body": "Versioned by Thrackle as ${{ steps.next-minor-verion.outputs.new_version }}, 
-                using assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.release_url }})",
-              "draft": false,
-              "prerelease": false
-            }' \
-            https://api.github.com/repos/${{ github.repository }}/releases
-
-          # Extract the release ID from the response
-          RELEASE_ID=$(echo "$RESPONSE" | jq -r .id)
-
-          # Set the release ID as an output for subsequent steps
-          echo "::set-output name=id::$RELEASE_ID"
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ steps.next-minor-verion.outputs.new_version }}",
+          release_name: "Foundry Version ${{ steps.next-minor-verion.outputs.new_version }}",
+          body: |
+            Versioned by Thrackle as ${{ steps.next-minor-verion.outputs.new_version }}.
+            Attached assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.release_url }}
+          draft: false
+          prerelease: false
 
       - name: Attach assets from foundry-rs release
         run: |
@@ -79,7 +70,7 @@ jobs:
             
             echo "Uploading $ASSET_NAME to new release..."
             curl -X POST \
-              -H "Authorization: token ${{ secrets.GH_TOKEN }}" \
+              -H "Authorization: Bearer ${{ secrets.GH_TOKEN }}" \
               -H "Content-Type: $(file -b --mime-type "$ASSET_NAME")" \
               --data-binary @"$ASSET_NAME" \
               https://uploads.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID/assets?name=$ASSET_NAME
