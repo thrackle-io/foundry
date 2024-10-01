@@ -12,7 +12,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -42,37 +42,41 @@ jobs:
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
+      - name: Fetch upstream release artifacts and calculate checksums
+        run: |
+          VERSION=${{ steps.next-minor-version.outputs.new_version }}
+          ASSETS_URL="${{ steps.get-foundry-release.outputs.assets_url }}"
+          ASSETS=$(curl -s $ASSETS_URL | jq -r '.[].browser_download_url')
+          echo "Foundry release assets: $ASSETS"
+
+          # Collect checksums for each asset:
+          CHECKSUMS_TXT="### Checksums for Foundry $VERSION\n\n"
+
+          for ASSET_URL in $ASSETS; do
+            ASSET_NAME=${$(basename "$ASSET_URL")/_nightly/_$VERSION}
+            echo "Downloading $ASSET_NAME from Foundry..."
+            curl -L "$ASSET_URL" -o "$ASSET_NAME"
+            CHECKSUMS_TXT+="$(sha256sum "$ASSET_NAME" | tee -a foundry_${VERSION}_checksums.txt)\n"
+          done
+          echo "checksums=$CHECKSUMS_TXT" >> $GITHUB_OUTPUT
+
       - name: Create Release
         id: create-release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          name: "Foundry ${{ steps.next-minor-version.outputs.new_version }}"
           tag_name: "${{ steps.next-minor-version.outputs.new_version }}"
-          release_name: "Foundry ${{ steps.next-minor-version.outputs.new_version }}"
           body: |
             Versioned by Thrackle as ${{ steps.next-minor-version.outputs.new_version }} from upstream Foundry release `${{ steps.get-foundry-release.outputs.upstream_name }}`
             Attached assets from [foundry-rs/foundry `${{ steps.get-foundry-release.outputs.upstream_name }}`](${{ steps.get-foundry-release.outputs.release_url }})
+            ${{ steps.get-foundry-release.outputs.checksums }} 
           draft: false
           prerelease: false
-
-      - name: Attach assets from upstream to this release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ASSETS_URL="${{ steps.get-foundry-release.outputs.assets_url }}"
-          RELEASE_ID="${{ steps.create-release.outputs.id }}"
-
-          ASSETS=$(curl -s $ASSETS_URL | jq -r '.[].browser_download_url')
-          
-          for ASSET_URL in $ASSETS; do
-            ASSET_NAME=$(basename "$ASSET_URL")
-            echo "Downloading $ASSET_NAME from Foundry..."
-            curl -L "$ASSET_URL" -o "$ASSET_NAME"
-
-            # Rename 'nightly' to the new version number
-            ASSET_NAME="${ASSET_NAME/_nightly_/_${{ steps.next-minor-version.outputs.new_version }}_}"
-            
-            echo "Uploading $ASSET_NAME to new release..."
-            gh release upload "${{ steps.next-minor-version.outputs.new_version }}" "$ASSET_NAME"
-          done
+          files: |
+            *.tgz
+            *.tar.gz
+            *.tar.bz2
+            *.zip
+            *checksums.txt
