@@ -14,6 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: master
           fetch-depth: 0
           fetch-tags: true
 
@@ -53,7 +54,7 @@ jobs:
           BODY=$'Versioned by Thrackle as $VERSION from upstream Foundry release \`${{ steps.get-foundry-release.outputs.upstream_name }}\`\n'
           BODY+=$'Attached assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.release_url }})'
           BODY+=$'\n\n'
-          BODY+=$'### Checksums for Foundry $VERSION\n\n'
+          BODY+=$'### Checksums for Foundry $VERSION\n\n```'
 
           for ASSET_URL in $ASSETS; do
             ASSET_NAME=$(basename "$ASSET_URL")
@@ -62,7 +63,7 @@ jobs:
             curl -L "$ASSET_URL" -o "$ASSET_NAME"
             BODY+=$(sha256sum "$ASSET_NAME" | tee -a foundry_${VERSION}_checksums.txt)$'\n'
           done
-          echo "$BODY" > release_body.txt
+          echo "$BODY"'```' > release_body.txt
 
       - name: Create Release
         id: create-release
