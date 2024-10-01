@@ -56,7 +56,9 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Attach assets from foundry-rs release
+      - name: Attach assets from upstream to this release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ASSETS_URL="${{ steps.get-foundry-release.outputs.assets_url }}"
           RELEASE_ID="${{ steps.create-release.outputs.id }}"
