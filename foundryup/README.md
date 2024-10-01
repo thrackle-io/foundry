@@ -2,6 +2,12 @@
 
 Update or revert to a specific Foundry branch with ease.
 
+> [!NOTE]
+> This repository contains trivial modifications to `foundryup` enabling `foundryup --version` 
+> to download precompiled binaries from the [thrackle-io/foundry](https://github.com/thrackle-io/foundry) repository.
+>
+> All binaries are bit-for-bit identical copies from [foundry-rs/foundry nightly releases](https://github.com/foundry-rs/foundry/releases)
+
 ## Installing
 
 ```sh
