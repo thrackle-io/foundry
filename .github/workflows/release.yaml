@@ -50,17 +50,17 @@ jobs:
           ASSETS=$(curl -s $ASSETS_URL | jq -r '.[].browser_download_url')
           echo "Foundry release assets: $ASSETS"
 
-          BODY="Versioned by Thrackle as $VERSION from upstream Foundry release '${{ steps.get-foundry-release.outputs.upstream_name }}'\n"
-          BODY+="Attached assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.release_url }})"
-          BODY+="\n\n"
-          BODY+="### Checksums for Foundry $VERSION\n\n"
+          BODY=$"Versioned by Thrackle as $VERSION from upstream Foundry release '${{ steps.get-foundry-release.outputs.upstream_name }}'\n"
+          BODY+=$"Attached assets from [foundry-rs/foundry ${{ steps.get-foundry-release.outputs.upstream_name }}](${{ steps.get-foundry-release.outputs.release_url }})"
+          BODY+=$"\n\n"
+          BODY+=$"### Checksums for Foundry $VERSION\n\n"
 
           for ASSET_URL in $ASSETS; do
             ASSET_NAME=$(basename "$ASSET_URL")
             ASSET_NAME=${ASSET_NAME/_nightly/_$VERSION}
             echo "Downloading $ASSET_NAME from Foundry..."
             curl -L "$ASSET_URL" -o "$ASSET_NAME"
-            BODY+="$(sha256sum "$ASSET_NAME" | tee -a foundry_${VERSION}_checksums.txt)\n"
+            BODY+=$"$(sha256sum "$ASSET_NAME" | tee -a foundry_${VERSION}_checksums.txt)\n"
           done
           echo "$BODY" > release_body.txt
 
