@@ -54,6 +54,7 @@ jobs:
           BODY="Versioned by Thrackle as '$VERSION' from upstream Foundry release '${{ steps.get-foundry-release.outputs.upstream_name }}'"
           BODY+=$'\n\n'
           BODY+="Attached assets from [foundry-rs/foundry '${{ steps.get-foundry-release.outputs.upstream_name }}'](${{ steps.get-foundry-release.outputs.release_url }})"
+          BODY+=" are bit-for-bit identical to the upstream release."
           BODY+=$'\n\n'
           BODY+="### Checksums for Foundry $VERSION"
           BODY+=$'\n\n''```'
