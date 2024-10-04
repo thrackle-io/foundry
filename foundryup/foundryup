@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 ## Thrackle.io modified foundryup script - When using --version, it will download versioned binaries from the thrackle-io/foundry repository.
 ## This was done as foundry-rs/foundry repository does not have versioned releases.
-## Lines 85 and 88 are the sole modifications made to the original script.
 set -eo pipefail
 
 BASE_DIR=${XDG_CONFIG_HOME:-$HOME}
@@ -89,7 +88,11 @@ main() {
 
   # Install by downloading binaries
   if [[ "$FOUNDRYUP_REPO" == "thrackle-io/foundry" && -z "$FOUNDRYUP_BRANCH" && -z "$FOUNDRYUP_COMMIT" ]]; then
-    FOUNDRYUP_VERSION=${FOUNDRYUP_VERSION:-nightly}
+    if [ -z "$FOUNDRYUP_VERSION" ]; then
+      # Query GitHub for the latest release tag 
+      FOUNDRYUP_VERSION=$(curl --silent https://api.github.com/repos/$FOUNDRYUP_REPO/releases/latest | 
+        grep -i "tag_name" | awk -F '"' '{print $4}')
+    fi
     FOUNDRYUP_TAG=$FOUNDRYUP_VERSION
 
     # Normalize versions (handle channels, versions without v prefix
@@ -142,12 +145,14 @@ main() {
 
     # Download and extract the binaries archive
     say "downloading latest forge, cast, anvil, and chisel"
+    ensure mkdir -p "$FOUNDRY_BIN_DIR"
     if [ "$PLATFORM" = "win32" ]; then
       tmp="$(mktemp -d 2>/dev/null || echo ".")/foundry.zip"
       ensure download "$BIN_ARCHIVE_URL" "$tmp"
       ensure unzip "$tmp" -d "$FOUNDRY_BIN_DIR"
       rm -f "$tmp"
     else
+      echo "Downloading $BIN_ARCHIVE_URL"
       ensure download "$BIN_ARCHIVE_URL" | ensure tar -xzC "$FOUNDRY_BIN_DIR"
     fi
 
