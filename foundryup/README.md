@@ -1,31 +1,45 @@
-# `foundryup`
+# Thrackle.io's `foundryup`
 
-Update or revert to a specific Foundry branch with ease.
+Update or revert to a specific Foundry version, commit, or branch with ease.
 
 > [!NOTE]
-> This repository contains trivial modifications to `foundryup` enabling `foundryup --version` 
+> This repository contains minor modifications to `foundryup` enabling `foundryup --version` 
 > to download precompiled binaries from the [thrackle-io/foundry](https://github.com/thrackle-io/foundry) repository.
->
-> All binaries are bit-for-bit identical copies from [foundry-rs/foundry nightly releases](https://github.com/foundry-rs/foundry/releases)
+> This repository provides weekly _versioned releases_ which attach unmodified binaries from [foundry-rs/foundry](https://github.com/foundry-rs/foundry/releases).
 
 ## Installing
 
 ```sh
-curl -L https://foundry.paradigm.xyz | bash
+mkdir -p $HOME/.foundry/bin/
+FOUNDRY_DIR=$HOME/.foundry
+echo "export PATH=$HOME/.foundry/bin:$PATH" >> ~/.zshrc # or ~/.bashrc, etc.
+
+curl -sSL https://raw.githubusercontent.com/thrackle-io/foundry/refs/heads/master/foundryup/foundryup -o $FOUNDRY_DIR/bin/foundryup
+chmod +x $FOUNDRY_DIR/bin/foundryup
 ```
 
 ## Usage
 
-To install the **nightly** version:
+To install the **latest** release version:
 
 ```sh
 foundryup
 ```
 
-To install a specific **version** (in this case the `nightly` version):
+To install a specific **version** (in this case the `v0.2.0` version):
 
 ```sh
-foundryup --version nightly
+foundryup --version v0.2.0
+# The "v" prefix is optional:
+foundryup --version 0.2.0
+```
+
+To install the version set in `foundry.lock`:
+
+Awk is used to ignore comments.
+
+```sh
+foundryup --version $(awk '$1~/^[^#]/' foundry.lock)
 ```
 
 To install a specific **branch** (in this case the `release/0.1.0` branch's latest commit):
