@@ -10,6 +10,15 @@ This repository contains modifications to `foundryup` made by [Thrackle](https:/
 
 When running `foundryup --version`, it will download versioned precompiled binaries from the [thrackle-io/foundry](https://github.com/thrackle-io/foundry) repository.
 
+## Dockerfile
+
+This repo also includes a `Dockerfile` which builds a container with the stock Foundry CLI tools, 
+for use in local development and continuous integration testing.
+
+`foundry.lock` sets the version from [Releases](https://github.com/thrackle-io/foundry/releases) to use.
+
+`foundry.toml` provides basic per-environemnt Foundry configurations. See [Configuration](#configuration) below for details.
+
 ## Foundry
 <img src="https://github.com/foundry-rs/foundry/blob/master/.github/logo.png" alt="Foundry logo" align="right" width="120" />
 
