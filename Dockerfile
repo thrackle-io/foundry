@@ -36,5 +36,6 @@ FROM foundry-base AS anvil
 ENV FOUNDRY_PROFILE=docker
 ENV RUST_LOG=backend,api,node,rpc=warn
 ENV CHAIN_ID=31337
-ENTRYPOINT ["/usr/bin/bash", "-c"]
-CMD ["anvil", "--host 0.0.0.0", "--chain-id $CHAIN_ID"]
+
+# Note, Anvil does not correctly load args if used as a CMD, so use ENTRYPOINT
+ENTRYPOINT anvil --host 0.0.0.0 --chain-id "$CHAIN_ID"
