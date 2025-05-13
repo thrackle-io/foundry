@@ -16,11 +16,15 @@ RUN apt install -y curl unzip git make procps python3 python3-pip python3.11-ven
 WORKDIR /usr/local/foundry
 
 COPY foundry.lock .
+COPY run-anvil.sh .
+
+RUN curl -L https://foundry.paradigm.xyz | bash
+RUN FOUNDRY_DIR=/usr/local /root/.foundry/bin/foundryup
 
 ## Install Foundry via Thrackle's foundryup, using version set in foundry.lock (awk ignores comments)
-RUN curl -sSL https://raw.githubusercontent.com/thrackle-io/foundry/refs/heads/master/foundryup/foundryup -o /usr/local/bin/foundryup && \
-  chmod +x /usr/local/bin/foundryup && \
-  FOUNDRY_DIR=/usr/local foundryup --version $(awk '$1~/^[^#]/' foundry.lock)
+#RUN curl -sSL https://raw.githubusercontent.com/thrackle-io/foundry/refs/heads/master/foundryup/foundryup -o /usr/local/bin/foundryup && \
+#  chmod +x /usr/local/bin/foundryup && \
+#  FOUNDRY_DIR=/usr/local foundryup --version $(awk '$1~/^[^#]/' foundry.lock)
 
 ################################################
 #
@@ -38,4 +42,4 @@ ENV RUST_LOG=backend,api,node,rpc=warn
 ENV CHAIN_ID=31337
 
 # Note, Anvil does not correctly load args if used as a CMD, so use ENTRYPOINT
-ENTRYPOINT anvil --host 0.0.0.0 --chain-id "$CHAIN_ID"
+ENTRYPOINT ./run-anvil.sh
