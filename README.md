@@ -1,5 +1,6 @@
 
 ## Thrackle.io Foundry Versioning
+FOUNDRY NOW HAS A STABLE RELEASE PROCESS!
 
 
 Providing numeric versioned releases of Foundry. All release assets are bit-for-bit identical copies from [foundry-rs/foundry nightly releases](https://github.com/foundry-rs/foundry/releases).
